@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>订单详情｜页面演示</title>
+<style>
+*{box-sizing:border-box}
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,"PingFang SC",sans-serif;color:#111;background:#626262;-webkit-font-smoothing:antialiased}
+html,body{margin:0;min-height:100%;background:#626262}
+body{display:flex;justify-content:center}
+.screen{width:100%;max-width:828px;min-height:100vh;background:#626262;position:relative}
+.sheet{background:#fff;margin:0 auto;width:92%;min-height:100vh;position:relative;padding-bottom:125px}
+.header{height:116px;display:flex;align-items:flex-start;justify-content:center;padding-top:49px;position:relative;font-size:29px;font-weight:650;letter-spacing:-.4px}
+.back{position:absolute;left:34px;top:28px;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.045)}
+.back svg{width:28px;height:28px}
+.product{height:340px;padding:26px 35px 28px 80px;display:flex;align-items:center;gap:65px;border-bottom:1px solid #f7f7f7}
+.device{width:148px;height:184px;flex:0 0 148px}
+.device svg{width:100%;height:100%;display:block}
+.product-copy{flex:1;min-width:0}
+.product-name{font-size:27px;font-weight:650;line-height:1.35;letter-spacing:-.5px;margin-bottom:20px}
+.price{font-size:26px;line-height:1.4}
+.arrow{font-size:42px;color:#c7c7cc;font-weight:300;margin-left:-45px}
+.ship{padding:39px 35px 36px}
+.ship h1{font-size:28px;line-height:1.45;font-weight:650;letter-spacing:-.45px;margin:0 0 22px}
+.ship p{font-size:25px;line-height:1.5;color:#929299;margin:0 0 39px}
+.progress{height:14px;background:#f0f0f4;border-radius:10px;overflow:hidden}
+.progress span{display:block;width:15.9%;height:100%;background:#30c65a;border-radius:10px;transition:width .28s ease}
+.stages{display:flex;justify-content:space-between;margin-top:6px;font-size:20px;white-space:nowrap;color:#929299}
+.stages span{padding:10px 2px;cursor:pointer}
+.stages span.active{color:#111}
+.stages span:focus-visible{outline:2px solid #087df1;outline-offset:2px;border-radius:6px}
+.address{border-top:1px solid #f6f6f6;padding:36px 35px 33px;display:grid;grid-template-columns:37% 63%;font-size:25px;line-height:1.9}
+.muted{color:#929299}
+.address-content{overflow-wrap:anywhere}
+.address-line{overflow-wrap:anywhere;line-height:1.9}
+.payment-title{height:116px;background:#f2f2f6;color:#929299;display:flex;align-items:center;padding:0 35px;font-size:26px}
+.row{min-height:108px;display:grid;grid-template-columns:37% 63%;align-items:center;padding:20px 35px;border-bottom:1px solid #f5f5f5;font-size:25px}
+.bottom{position:absolute;left:30px;right:30px;bottom:27px;height:83px;border-radius:48px;background:rgba(255,255,255,.96);box-shadow:0 1px 20px rgba(0,0,0,.04);display:flex;align-items:center;justify-content:space-around;padding:5px 10px}
+.tab{font-size:18px;line-height:1.25;text-align:center;min-width:66px;color:#111;white-space:nowrap}
+.tab-icon{height:22px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.tab-icon svg{width:22px;height:22px;stroke:currentColor}
+.tab.active{background:#f0f0f3;border-radius:45px;padding:8px 18px;color:#0784f9}
+.tab.active svg{fill:#087df1;stroke:#fff}
+.search{width:18px;height:18px;border:1.6px solid #111;border-radius:50%;position:relative}
+.search:after{content:"";position:absolute;width:7.5px;height:1.6px;background:#111;right:-6px;bottom:-3.5px;transform:rotate(48deg);border-radius:2px}
+/* 可编辑字段：点文字直接改，失焦自动存到本机浏览器（键名 order-demo:<data-field>） */
+.device{cursor:pointer;position:relative;overflow:hidden;border-radius:10px}
+.device:focus-visible{outline:2px solid #087df1;outline-offset:4px;border-radius:8px}
+.device img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.device:after{content:"点击上传";position:absolute;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,.92);color:#8e8e93;font-size:15px;opacity:0;transition:opacity .15s}
+.device:hover:after{opacity:1}
+.device.has-photo:after{content:none;display:none}
+.editable{cursor:text;transition:outline-color .12s,background .12s}
+.editable:hover{outline:1px dashed #c8d2e0;outline-offset:3px;border-radius:6px}
+.editable.editing{outline:2px solid #087df1;outline-offset:3px;border-radius:6px;background:#eef5ff;cursor:auto}
+.address-line.editing{outline-offset:1px}
+.editable:empty:before{content:attr(data-placeholder);color:#b0b0b8;font-weight:400}
+/* 中屏（平板/手机宽屏 600-860px）：原设计仅适配 828px 画板，此处补足字号与间距 */
+@media(min-width:601px) and (max-width:860px){
+ .header{height:84px;padding-top:34px;font-size:22px}
+ .back{left:20px;top:18px;width:46px;height:46px}.back svg{width:20px;height:20px}
+ .product{padding:22px 20px 22px 48px;gap:34px}
+ .ship{padding:30px 20px 28px}
+ .ship h1{font-size:20px}
+ .ship p{font-size:17px}
+ .stages{font-size:14.5px}
+ .address{padding:26px 20px 24px;font-size:17px}
+ .payment-title{height:76px;padding:0 20px;font-size:18px}
+ .row{padding:0 20px;font-size:17px}
+ .bottom{left:18px;right:18px;bottom:18px;height:70px}
+ .tab{font-size:13px;min-width:48px}
+ .tab.active{padding:7px 12px}
+ .tab-icon{height:24px}.tab-icon svg{width:20px;height:20px}
+ .search{width:15.5px;height:15.5px}.search:after{width:6.5px;right:-5.2px;bottom:-3px}
+}
+@media(max-width:600px){
+ .sheet{width:92%;min-height:100vh;padding-bottom:105px}
+ .header{height:70px;padding-top:31px;font-size:19px}
+ .back{left:17px;top:16px;width:40px;height:40px}.back svg{width:19px;height:19px}
+ .product{height:280px;padding:22px 18px 20px 42px;gap:27px}
+ .device{width:76px;height:116px;flex-basis:76px}
+ .product-name{font-size:15px;margin-bottom:15px}
+ .price{font-size:15px}.arrow{font-size:27px;margin-left:-21px}
+ .ship{padding:28px 18px 24px}
+ .ship h1{font-size:17px;margin-bottom:13px}
+ .ship p{font-size:14px;margin-bottom:27px}
+ .progress{height:7px}.stages{font-size:11px;margin-top:4px}.stages span{padding:7px 1px}
+ .address{padding:23px 18px 25px;font-size:14px;line-height:1.8}
+ .address-line{line-height:1.8}
+ .payment-title{height:61px;padding:0 18px;font-size:15px}
+ .row{min-height:68px;padding:18px;font-size:14px}
+ .bottom{left:15px;right:15px;bottom:14px;height:62px;padding:4px 5px}
+ .tab{font-size:10px;min-width:39px}.tab.active{padding:6px 10px;min-width:65px}
+ .tab-icon{height:24px;margin-bottom:3px}.tab-icon svg{width:18px;height:18px}
+ .search{width:15.5px;height:15.5px}.search:after{width:6.5px;right:-5.2px;bottom:-3px}
+}
+</style>
+</head>
+<body>
+<main class="screen">
+  <article class="sheet">
+    <header class="header"><span class="back" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8"/></svg></span>订单详情</header>
+    <section class="product">
+      <div class="device" id="deviceSlot" role="button" tabindex="0" title="点一下上传自己的图片，双击恢复默认">
+        <svg viewBox="0 0 148 184" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#454649"/><stop offset=".45" stop-color="#101112"/><stop offset="1" stop-color="#292a2c"/></linearGradient>
+            <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17191b"/><stop offset=".4" stop-color="#53575a"/><stop offset=".65" stop-color="#17191b"/><stop offset="1" stop-color="#36383a"/></linearGradient>
+            <radialGradient id="lens"><stop stop-color="#5c5d60"/><stop offset=".35" stop-color="#171819"/><stop offset="1" stop-color="#050505"/></radialGradient>
+          </defs>
+          <rect x="3" y="2" width="86" height="180" rx="14" fill="url(#body)" stroke="#5b5c5f" stroke-width="1.5"/>
+          <rect x="6" y="5" width="48" height="49" rx="11" fill="#191a1c" stroke="#38393b"/>
+          <circle cx="19" cy="18" r="9" fill="url(#lens)" stroke="#515255"/>
+          <circle cx="19" cy="40" r="9" fill="url(#lens)" stroke="#515255"/>
+          <circle cx="41" cy="29" r="9" fill="url(#lens)" stroke="#515255"/>
+          <circle cx="49" cy="12" r="2.5" fill="#d6d6d6"/>
+          <path d="M41 106h1" stroke="#777"/>
+          <rect x="62" y="2" width="84" height="180" rx="14" fill="url(#screen)" stroke="#55575a" stroke-width="1.5"/>
+          <rect x="91" y="8" width="22" height="5" rx="3" fill="#070707"/>
+          <path d="M63 48c22-1 22 12 82 11M63 89c28-1 35 12 82 11M63 131c23 0 33 12 82 11" fill="none" stroke="#d5d6d7" stroke-opacity=".42" stroke-width="2"/>
+          <path d="M63 48c7 15 17 12 27 12M63 89c7 15 17 12 27 12M63 131c7 15 17 12 27 12" fill="none" stroke="#08090a" stroke-opacity=".75" stroke-width="4"/>
+        </svg>
+      </div>
+      <div class="product-copy"><div class="product-name editable" id="productName" data-field="productName" data-placeholder="输入产品名称" spellcheck="false">智能手机 Pro Max 256GB 黑色</div><div class="price editable" data-field="price" data-placeholder="输入金额" spellcheck="false">RMB 10,999</div></div>
+      <span class="arrow">›</span>
+    </section>
+    <section class="ship">
+      <h1>预计送达日期待订单处理后确定</h1>
+      <p>我们已收到你的付款，很快就会开始准备你的订单。</p>
+      <div class="progress"><span></span></div>
+      <div class="stages" role="tablist" aria-label="订单进度">
+        <span class="active" role="tab" tabindex="0" data-step="0" aria-selected="true">已收到付款</span>
+        <span role="tab" tabindex="0" data-step="1" aria-selected="false">准备发货</span>
+        <span role="tab" tabindex="0" data-step="2" aria-selected="false">已发货</span>
+        <span role="tab" tabindex="0" data-step="3" aria-selected="false">已送达</span>
+      </div>
+    </section>
+    <section class="address">
+      <div class="muted">送货地址</div>
+      <div class="address-content"><div class="address-line editable" data-field="addr1" data-placeholder="省份 城市 区县" spellcheck="false">陕西 汉中西乡县</div><div class="address-line editable" data-field="addr2" data-placeholder="街道门牌" spellcheck="false">城关镇上</div><div class="address-line editable" data-field="addr3" data-placeholder="邮编" spellcheck="false">723000</div><div class="address-line editable" data-field="addr4" data-placeholder="电话" spellcheck="false">电话：***-****-1234</div><div class="address-line editable" data-field="addr5" data-placeholder="邮箱" spellcheck="false">邮箱：example@example.com</div></div>
+    </section>
+    <div class="row"><div class="muted">交货</div><div class="editable" data-field="delivery" data-placeholder="配送方式与日期" spellcheck="false">周日 2026/09/20 通过 标准送货</div></div>
+    <div class="payment-title">付款摘要</div>
+    <div class="row"><div class="muted">订单号</div><div class="editable" data-field="orderNo" data-placeholder="订单号" spellcheck="false">W8293017746</div></div>
+    <div class="row"><div class="muted">付款</div><div class="editable" data-field="payment" data-placeholder="付款方式" spellcheck="false">微信付款</div></div>
+    <nav class="bottom" aria-label="底部导航">
+      <div class="tab active"><div class="tab-icon"><svg viewBox="0 0 24 24" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="4.2"/><path d="M7.8 9.2h8.4M7.8 12h8.4M7.8 14.8h5"/></svg></div>为你推荐</div>
+      <div class="tab"><div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3.5" y="3.5" width="10.5" height="17" rx="2"/><rect x="17" y="8.5" width="4" height="12" rx="1.1"/></svg></div>产品</div>
+      <div class="tab"><div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="m15.1 8.9-2.2 5.9-5.9 2.2 2.2-5.9z"/></svg></div>深入探索</div>
+      <div class="tab"><div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="3.5" y="7.5" width="17" height="13" rx="2"/><path d="M8.5 7.5V6a3.5 3.5 0 0 1 7 0v1.5"/></svg></div>购物袋</div>
+      <div class="tab"><div class="tab-icon"><div class="search"></div></div>搜索</div>
+    </nav>
+  </article>
+</main>
+<script>
+(function () {
+  var STORE = 'order-demo:';
+  var fields = [].slice.call(document.querySelectorAll('.editable'));
+  var key = function (el) { return STORE + el.getAttribute('data-field'); };
+  var ready = true;
+
+  function save(el) {
+    if (!ready) { return; }
+    try { localStorage.setItem(key(el), el.textContent.trim()); } catch (e) {}
+  }
+
+  function stopEdit(el) {
+    if (el.getAttribute('contenteditable') !== 'true') { return; }
+    el.setAttribute('contenteditable', 'false');
+    el.classList.remove('editing');
+    el.removeAttribute('title');
+    save(el);
+  }
+
+  fields.forEach(function (el) {
+    try {
+      var saved = localStorage.getItem(key(el));
+      if (saved !== null && saved !== '') { el.textContent = saved; }
+    } catch (e) { ready = false; }
+
+    el.setAttribute('contenteditable', 'false');
+    el.setAttribute('spellcheck', 'false');
+    el.setAttribute('title', '点一下即可修改');
+
+    el.addEventListener('click', function () {
+      stopEditAll(el);
+      el.setAttribute('contenteditable', 'true');
+      el.classList.add('editing');
+      el.removeAttribute('title');
+      el.focus();
+    });
+
+    el.addEventListener('blur', function () { stopEdit(el); });
+    el.addEventListener('input', function () { save(el); });
+
+    el.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { event.preventDefault(); el.blur(); }
+      if (event.key === 'Escape') { el.blur(); }
+    });
+
+    el.addEventListener('paste', function (event) {
+      event.preventDefault();
+      var text = (event.clipboardData || window.clipboardData).getData('text') || '';
+      text = text.replace(/\s+/g, ' ');
+      document.execCommand('insertText', false, text);
+    });
+  });
+
+  function stopEditAll(except) {
+    fields.forEach(function (el) { if (el !== except) { stopEdit(el); } });
+  }
+
+  /* ---- 订单进度：点某一阶段即可切换，选中状态存在本机浏览器 ---- */
+  var stages = [].slice.call(document.querySelectorAll('.stages span'));
+  var barFill = document.querySelector('.progress span');
+  var progressFill = [15.9, 45.9, 73, 100];
+  var STEP_KEY = STORE + 'step';
+
+  function setStep(i) {
+    stages.forEach(function (s, k) {
+      s.classList.toggle('active', k === i);
+      s.setAttribute('aria-selected', k === i ? 'true' : 'false');
+    });
+    if (barFill) { barFill.style.width = progressFill[i] + '%'; }
+    try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {}
+  }
+
+  stages.forEach(function (s, i) {
+    s.addEventListener('click', function () { setStep(i); });
+    s.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setStep(i); }
+    });
+  });
+
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem(STEP_KEY); } catch (e) {}
+    var n = saved === null ? NaN : parseInt(saved, 10);
+    setStep(isNaN(n) || n < 0 || n > stages.length - 1 ? 0 : n);
+  })();
+
+  /* ---- 产品图：点击上传自己的图片（压缩后存在本机浏览器），双击恢复默认 ---- */
+  var PHOTO_KEY = STORE + 'photo';
+  var MAX_SIDE = 512;
+  var MAX_BYTES = 4 * 1024 * 1024;
+  var slot = document.getElementById('deviceSlot');
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  var suppressClick = false;
+
+  function usePhoto(dataUrl) {
+    var img = slot.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.alt = '产品图';
+      slot.appendChild(img);
+    }
+    img.src = dataUrl;
+    slot.classList.add('has-photo');
+  }
+
+  function clearPhoto() {
+    var img = slot.querySelector('img');
+    if (img) { img.remove(); }
+    slot.classList.remove('has-photo');
+    try { localStorage.removeItem(PHOTO_KEY); } catch (e) {}
+  }
+
+  try {
+    var storedPhoto = localStorage.getItem(PHOTO_KEY);
+    if (storedPhoto) { usePhoto(storedPhoto); }
+  } catch (e) {}
+
+  function shrink(file, quality, done) {
+    var url = URL.createObjectURL(file);
+    var image = new Image();
+    image.onload = function () {
+      var scale = Math.min(1, MAX_SIDE / Math.max(image.width, image.height));
+      var cv = document.createElement('canvas');
+      cv.width = Math.max(1, Math.round(image.width * scale));
+      cv.height = Math.max(1, Math.round(image.height * scale));
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(image, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      done(cv.toDataURL('image/jpeg', quality));
+    };
+    image.onerror = function () { URL.revokeObjectURL(url); done(null); };
+    image.src = url;
+  }
+
+  input.addEventListener('change', function () {
+    var file = input.files && input.files[0];
+    input.value = '';
+    if (!file) { return; }
+    shrink(file, 0.85, function (dataUrl) {
+      if (!dataUrl) { return; }
+      if (dataUrl.length > MAX_BYTES) {
+        shrink(file, 0.6, function (smaller) {
+          if (smaller && smaller.length <= MAX_BYTES) { commitPhoto(smaller); }
+        });
+        return;
+      }
+      commitPhoto(dataUrl);
+    });
+  });
+
+  function commitPhoto(dataUrl) {
+    usePhoto(dataUrl);
+    try { localStorage.setItem(PHOTO_KEY, dataUrl); } catch (e) {}
+  }
+
+  slot.addEventListener('click', function () {
+    if (suppressClick) { return; }
+    if (slot.classList.contains('has-photo')) { clearPhoto(); }
+    setTimeout(function () { input.click(); }, 260);
+  });
+
+  slot.addEventListener('dblclick', function () {
+    suppressClick = true;
+    setTimeout(function () { suppressClick = false; }, 700);
+    clearPhoto();
+  });
+
+  slot.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      input.click();
+    }
+  });
+})();
+</script>
+</body>
+</html>

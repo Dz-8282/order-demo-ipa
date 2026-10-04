@@ -1,0 +1,28 @@
+# 临时产物 / 本地实验
+_*.png
+_*.html
+.write_probe.txt
+
+# 证书与签名材料，绝不入库
+_cert/
+*.zip
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.pfx
+*.cer
+
+# 构建产物
+ipa/build/
+*.xcarchive
+DerivedData/
+*.ipa
+
+# macOS
+.DS_Store
+
+# Windows / 编辑器
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

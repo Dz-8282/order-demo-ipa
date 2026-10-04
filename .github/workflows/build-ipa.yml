@@ -1,0 +1,50 @@
+name: Build IPA
+
+# 没有 Mac 也能出 ipa：把仓库推到 GitHub，在 Actions 里点一下跑这个工作流，
+# 跑完在 run 的 Artifacts 里下载 HTML-ipa（未签名，回 Windows 用 Sideloadly 以 Apple ID 签名安装）。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检查工程结构
+        run: |
+          test -f ipa/HTMLApp.xcodeproj/project.pbxproj
+          test -f ipa/HTMLApp/Info.plist
+
+      - name: 把最新 HTML 打进工程
+        run: cp apple_order_layout_demo.html ipa/HTMLApp/index.html
+
+      - name: xcodebuild archive（不签名）
+        run: |
+          cd ipa
+          xcodebuild \
+            -project HTMLApp.xcodeproj \
+            -scheme HTMLApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/HTML.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= \
+            archive
+
+      - name: 打包成 ipa
+        run: |
+          cd ipa
+          APP=build/HTML.xcarchive/Products/Applications/HTML.app
+          test -d "$APP"
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          cd build && zip -qry HTML.ipa Payload && ls -la HTML.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HTML-ipa
+          path: ipa/build/HTML.ipa
+          if-no-files-found: error
