@@ -1,10 +1,12 @@
 import UIKit
 import WebKit
 
-/// 承载离线 HTML 的 WKWebView。
-/// - 页面从 bundle 内 file:// 加载，无网络也能跑
-/// - 接管 <input type="file"> 的点击，弹出「拍照 / 相册 / 文件」
-/// - localStorage 位于 App 沙箱，卸载 App 才会清空
+/// Hosts the offline page in a WKWebView.
+///
+/// - loads file:// from the app bundle, so it works in airplane mode
+/// - `<input type="file">` is handled natively by WebKit on iOS; we only narrow the
+///   read-access grant to the temporary directory so the picked image is visible
+/// - edits and the uploaded photo land in the sandbox's localStorage
 final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
 
   private var webView: WKWebView!
@@ -34,124 +36,38 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
     self.webView = webView
 
     guard let indexPath = Bundle.main.path(forResource: "index", ofType: "html") else {
-      assertionFailure("index.html 没有打进 bundle，检查 target 的 Copy Bundle Resources")
+      assertionFailure("index.html is missing from Copy Bundle Resources")
       return
     }
 
-    let bundleRoot = Bundle.main.bundleURL
     let fileURL = URL(fileURLWithPath: indexPath)
-    if #available(iOS 9.0, *) {
-      webView.loadFileURL(fileURL, allowingReadAccessTo: bundleRoot)
-    } else {
-      webView.load(URLRequest(url: fileURL))
-    }
+    // Narrow the grant to the temp dir (that is where picked images are staged) plus the bundle.
+    let tempDir = FileManager.default.temporaryDirectory
+    webView.loadFileURL(fileURL, allowingReadAccessTo: tempDir)
   }
 
   // MARK: - WKUIDelegate
 
-  /// 让 <input type="file"> 真正弹出相机/相册
-  @available(iOS 9.0, *)
+  @available(iOS 13.0, *)
   func webView(_ webView: WKWebView,
-               runOpenPanelWith parameters: WKOpenPanelParameters,
-               initiatedByFrame frame: WKFrameInfo,
-               completionHandler: @escaping ([URL]?) -> Void) {
-    let sheet = UIAlertController(title: "选择产品图", message: nil, preferredStyle: .actionSheet)
-    sheet.addAction(UIAlertAction(title: "拍照", style: .default) { _ in
-      self.presentMediaPicker(source: .camera, completionHandler: completionHandler)
-    })
-    sheet.addAction(UIAlertAction(title: "从相册选择", style: .default) { _ in
-      self.presentMediaPicker(source: .photoLibrary, completionHandler: completionHandler)
-    })
-    sheet.addAction(UIAlertAction(title: "文件", style: .default) { _ in
-      self.presentDocumentPicker(completionHandler: completionHandler)
-    })
-    sheet.addAction(UIAlertAction(title: "取消", style: .cancel) { _ in
-      completionHandler(nil)
-    })
-
-    // iPad 上 action sheet 需要锚点
-    if let popover = sheet.popoverPresentationController {
-      popover.sourceView = view
-      popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
-    }
-    present(sheet, animated: true)
+               contextMenuConfigurationForElement elementInfo: WKContextMenuElementInfo,
+               completionHandler: @escaping (UIContextMenuConfiguration?) -> Void) {
+    completionHandler(nil)
   }
 
-  private func presentMediaPicker(source: UIImagePickerController.SourceType,
-                                  completionHandler: @escaping ([URL]?) -> Void) {
-    guard UIImagePickerController.isSourceTypeAvailable(source) else {
-      completionHandler(nil)
+  // MARK: - WKNavigationDelegate
+
+  /// Keep third-party links out of the app; the page itself has no network calls.
+  func webView(_ webView: WKWebView,
+               decidePolicyFor navigationAction: WKNavigationAction,
+               decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    if let url = navigationAction.request.url,
+       navigationAction.navigationType == .linkActivated,
+       url.scheme == "http" || url.scheme == "https" {
+      UIApplication.shared.open(url)
+      decisionHandler(.cancel)
       return
     }
-    let picker = UIImagePickerController()
-    picker.sourceType = source
-    picker.mediaTypes = ["public.image"]
-    picker.delegate = self
-    pendingOpenPanel = completionHandler
-    present(picker, animated: true)
-  }
-
-  private func presentDocumentPicker(completionHandler: @escaping ([URL]?) -> Void) {
-    let picker = UIDocumentPickerViewController(documentTypes: ["public.image"], in: .import)
-    picker.delegate = self
-    pendingOpenPanel = completionHandler
-    present(picker, animated: true)
-  }
-
-  private var pendingOpenPanel: (([URL]?) -> Void)?
-
-  private func finishOpenPanel(with url: URL?) {
-    guard let handler = pendingOpenPanel else { return }
-    pendingOpenPanel = nil
-    guard let url = url else { handler(nil); return }
-    let tmp = FileManager.default.temporaryDirectory
-      .appendingPathComponent(UUID().uuidString + "." + (url.pathExtension.isEmpty ? "jpg" : url.pathExtension))
-    do {
-      try FileManager.default.copyItem(at: url, to: tmp)
-      handler([tmp])
-    } catch {
-      handler([url])
-    }
-  }
-
-  private func finishOpenPanel(with image: UIImage?) {
-    guard let handler = pendingOpenPanel else { return }
-    pendingOpenPanel = nil
-    guard let image = image, let data = image.jpegData(compressionQuality: 0.9) else { handler(nil); return }
-    let tmp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
-    do {
-      try data.write(to: tmp)
-      handler([tmp])
-    } catch {
-      handler(nil)
-    }
-  }
-}
-
-extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-  func imagePickerController(_ picker: UIImagePickerController,
-                             didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-    picker.dismiss(animated: true)
-    if let url = info[.imageURL] as? URL {
-      finishOpenPanel(with: url)
-    } else {
-      finishOpenPanel(with: info[.originalImage] as? UIImage)
-    }
-  }
-
-  func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-    picker.dismiss(animated: true) { [weak self] in
-      self?.finishOpenPanel(with: nil)
-    }
-  }
-}
-
-extension ViewController: UIDocumentPickerDelegate {
-  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-    finishOpenPanel(with: urls.first)
-  }
-
-  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-    finishOpenPanel(with: nil)
+    decisionHandler(.allow)
   }
 }

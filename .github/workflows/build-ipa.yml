@@ -11,17 +11,18 @@ jobs:
   build:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: 检查工程结构
+      - name: Check project layout
         run: |
           test -f ipa/HTMLApp.xcodeproj/project.pbxproj
           test -f ipa/HTMLApp/Info.plist
 
-      - name: 把最新 HTML 打进工程
+      - name: Push latest HTML into the app bundle
         run: cp apple_order_layout_demo.html ipa/HTMLApp/index.html
 
-      - name: xcodebuild archive（不签名）
+      - name: xcodebuild archive (no signing)
         run: |
           cd ipa
           xcodebuild \
@@ -34,7 +35,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= \
             archive
 
-      - name: 打包成 ipa
+      - name: Package into ipa
         run: |
           cd ipa
           APP=build/HTML.xcarchive/Products/Applications/HTML.app
