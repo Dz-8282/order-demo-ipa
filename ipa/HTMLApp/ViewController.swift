@@ -40,10 +40,27 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
       return
     }
 
+    // allowReadAccessTo must cover the file we load. The bundle directory does that,
+    // and WebKit still gets to read picked files because temp/ and the bundle are
+    // both inside the container. Passing an unrelated directory here loads a blank page.
     let fileURL = URL(fileURLWithPath: indexPath)
-    // Narrow the grant to the temp dir (that is where picked images are staged) plus the bundle.
-    let tempDir = FileManager.default.temporaryDirectory
-    webView.loadFileURL(fileURL, allowingReadAccessTo: tempDir)
+    let readRoot = Bundle.main.bundleURL
+    webView.loadFileURL(fileURL, allowingReadAccessTo: readRoot)
+  }
+
+  /// A blank screen is the worst failure mode: keep a visible reason on screen instead.
+  private func showLoadFailure(_ error: Error?) {
+    let reason = error?.localizedDescription ?? "unknown error"
+    let html = """
+    <!doctype html><html><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head><body style="font:16px -apple-system;padding:28px;color:#111">
+    <h2>页面没有加载出来</h2>
+    <p style="color:#8e8e93">index.html 没能从 App 包内读取。</p>
+    <pre style="white-space:pre-wrap;color:#c0392b">\(reason)</pre>
+    </body></html>
+    """
+    webView.loadHTMLString(html, baseURL: nil)
   }
 
   // MARK: - WKUIDelegate
@@ -69,5 +86,13 @@ final class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate
       return
     }
     decisionHandler(.allow)
+  }
+
+  func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    showLoadFailure(error)
+  }
+
+  func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    showLoadFailure(error)
   }
 }
