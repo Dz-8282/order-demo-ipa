@@ -6,11 +6,11 @@
 <title>订单详情｜页面演示</title>
 <style>
 *{box-sizing:border-box}
-:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,"PingFang SC",sans-serif;color:#111;background:#626262;-webkit-font-smoothing:antialiased}
-html,body{margin:0;min-height:100%;background:#626262}
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,"PingFang SC",sans-serif;color:#111;background:#fff;-webkit-font-smoothing:antialiased}
+html,body{margin:0;min-height:100%;background:#fff}
 body{display:flex;justify-content:center}
-.screen{width:100%;max-width:828px;min-height:100vh;background:#626262;position:relative}
-.sheet{background:#fff;margin:0 auto;width:92%;min-height:100vh;position:relative;padding-bottom:125px}
+.screen{width:100%;max-width:828px;min-height:100dvh;background:#fff;position:relative}
+.sheet{background:#fff;margin:0 auto;width:100%;min-height:100dvh;position:relative;padding-bottom:96px}
 .header{height:116px;display:flex;align-items:flex-start;justify-content:center;padding-top:49px;position:relative;font-size:29px;font-weight:650;letter-spacing:-.4px}
 .back{position:absolute;left:34px;top:28px;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.045)}
 .back svg{width:28px;height:28px}
@@ -65,6 +65,7 @@ body{display:flex;justify-content:center}
  .ship h1{font-size:20px}
  .ship p{font-size:17px}
  .stages{font-size:14.5px}
+ .progress span{width:10.5%}
  .address{padding:26px 20px 24px;font-size:17px}
  .payment-title{height:76px;padding:0 20px;font-size:18px}
  .row{padding:0 20px;font-size:17px}
@@ -75,24 +76,24 @@ body{display:flex;justify-content:center}
  .search{width:15.5px;height:15.5px}.search:after{width:6.5px;right:-5.2px;bottom:-3px}
 }
 @media(max-width:600px){
- .sheet{width:92%;min-height:100vh;padding-bottom:105px}
- .header{height:70px;padding-top:31px;font-size:19px}
- .back{left:17px;top:16px;width:40px;height:40px}.back svg{width:19px;height:19px}
- .product{height:280px;padding:22px 18px 20px 42px;gap:27px}
- .device{width:76px;height:116px;flex-basis:76px}
- .product-name{font-size:15px;margin-bottom:15px}
+ .sheet{width:100%;min-height:100dvh;padding-bottom:82px}
+ .header{height:56px;padding-top:21px;font-size:19px}
+ .back{left:17px;top:11px;width:40px;height:40px}.back svg{width:19px;height:19px}
+ .product{height:auto;min-height:184px;padding:15px 16px 15px 38px;gap:22px}
+ .device{width:68px;height:104px;flex-basis:68px}
+ .product-name{font-size:15px;margin-bottom:11px}
  .price{font-size:15px}.arrow{font-size:27px;margin-left:-21px}
- .ship{padding:28px 18px 24px}
- .ship h1{font-size:17px;margin-bottom:13px}
- .ship p{font-size:14px;margin-bottom:27px}
- .progress{height:7px}.stages{font-size:11px;margin-top:4px}.stages span{padding:7px 1px}
- .address{padding:23px 18px 25px;font-size:14px;line-height:1.8}
- .address-line{line-height:1.8}
- .payment-title{height:61px;padding:0 18px;font-size:15px}
- .row{min-height:68px;padding:18px;font-size:14px}
- .bottom{left:15px;right:15px;bottom:14px;height:62px;padding:4px 5px}
+ .ship{padding:16px 16px 14px}
+ .ship h1{font-size:17px;margin-bottom:8px}
+ .ship p{font-size:14px;margin-bottom:15px}
+ .progress{height:7px}.progress span{width:15.6%}.stages{font-size:11px;margin-top:3px}.stages span{padding:6px 1px}
+ .address{padding:14px 16px 13px;font-size:14px;line-height:1.68}
+ .address-line{line-height:1.68}
+ .payment-title{height:44px;padding:0 16px;font-size:15px}
+ .row{min-height:52px;padding:10px 16px;font-size:14px}
+ .bottom{left:12px;right:12px;bottom:8px;height:58px;padding:4px 5px}
  .tab{font-size:10px;min-width:39px}.tab.active{padding:6px 10px;min-width:65px}
- .tab-icon{height:24px;margin-bottom:3px}.tab-icon svg{width:18px;height:18px}
+ .tab-icon{height:22px;margin-bottom:3px}.tab-icon svg{width:18px;height:18px}
  .search{width:15.5px;height:15.5px}.search:after{width:6.5px;right:-5.2px;bottom:-3px}
 }
 </style>
@@ -214,7 +215,10 @@ body{display:flex;justify-content:center}
   /* ---- 订单进度：点某一阶段即可切换，选中状态存在本机浏览器 ---- */
   var stages = [].slice.call(document.querySelectorAll('.stages span'));
   var barFill = document.querySelector('.progress span');
-  var progressFill = [15.9, 45.9, 73, 100];
+  // 每档绿条右端对齐对应标签的文字右缘；百分比在窄屏/中屏/宽屏三档分别标定
+  var progressFill = window.matchMedia('(max-width: 600px)').matches ? [15.6, 45.7, 72.8, 100]
+                   : window.matchMedia('(max-width: 860px)').matches ? [10.5, 41.7, 70.8, 100]
+                   : [15.9, 45.9, 73, 100];
   var STEP_KEY = STORE + 'step';
 
   function setStep(i) {
